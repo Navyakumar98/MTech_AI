@@ -9,3 +9,7 @@ openpyxl
 requests
 PyPDF2
 pdfplumber
+torch
+sentence-transformers
+faiss-cpu
+PyMuPDF
