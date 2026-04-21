@@ -109,5 +109,8 @@ def recruiter():
         print("Recruiter error:", str(e))
         return jsonify({"error": "Internal error", "details": str(e)}), 500
 
+from api_blueprint import api_bp
+app.register_blueprint(api_bp, url_prefix='/api')
+
 if __name__ == '__main__':
     app.run(debug=True)

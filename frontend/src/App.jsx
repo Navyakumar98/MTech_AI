@@ -8,8 +8,8 @@ import AuthFormNew from './components/AuthFormNew';
 import Home from './components/Home';
 import About from './components/About';
 import { auth } from './firebase';
-import AnalysisPage from './components/JobSeeker/AnalysisPage';
-import RecruiterPage from './components/Recruiter/RecruiterPage';
+import JobseekerModule from './components/JobseekerModule';
+import RecruiterModule from './components/RecruiterModule';
 import Header from './components/Header';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
@@ -68,10 +68,9 @@ const App = () => {
 
         {/* Protected Routes */}
         <Route path="/select-role" element={role === 'admin' ? <RoleSelection /> : <Navigate to="/auth" />} />
-        {/* <Route path="/jobseeker" element={user ? <UploadForm /> : <Navigate to="/auth" />} /> */}
-        <Route path="/jobseeker" element={role === 'jobSeeker' || role === 'admin' ? <AnalysisPage /> : <Navigate to="/auth" />} />
-        {/* <Route path="/recruiter" element={user ? <RecruiterForm /> : <Navigate to="/auth" />} /> */}
-        <Route path="/recruiter" element={role === 'recruiter' || role === 'admin' ? <RecruiterPage /> : <Navigate to="/auth" />} />
+        {/* Updated routes mapping to our newly created React Streamlit-like modules */}
+        <Route path="/jobseeker" element={role === 'jobSeeker' || role === 'admin' ? <JobseekerModule /> : <Navigate to="/auth" />} />
+        <Route path="/recruiter" element={role === 'recruiter' || role === 'admin' ? <RecruiterModule /> : <Navigate to="/auth" />} />
       </Routes>
    </>   
   );
