@@ -1,0 +1,12 @@
+frontend/node_modules/
+backend/__pycache__/
+backend/.venv/venv/
+**/venv/
+venv/
+job-recommendation-system-ai/venv/
+__pycache__/
+venv/
+**/venv/
+__pycache__/
+node_modules/
+.env
