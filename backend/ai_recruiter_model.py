@@ -23,9 +23,41 @@ class RecruiterRankingSystem:
 
         self.model=get_model()
 
-        self.resumes_df=pd.read_csv(resumes_csv)
+        # self.resumes_df=pd.read_csv(resumes_csv)
 
-        self.resume_texts=self.resumes_df["resume_text"].astype(str).tolist()
+        # self.resume_texts=self.resumes_df["resume_text"].astype(str).tolist()
+
+        base_dir = os.path.dirname(__file__)
+        csv_path = os.path.join(base_dir, resumes_csv)
+
+        self.resumes_df = pd.read_csv(
+            csv_path,
+            encoding="utf-8",
+            quotechar='"',
+            skipinitialspace=True
+        )
+
+        # remove hidden spaces in headers
+        self.resumes_df.columns = self.resumes_df.columns.str.strip()
+
+        print("Loaded Resume CSV Columns:", self.resumes_df.columns.tolist())
+
+        if "resume_text" not in self.resumes_df.columns:
+            raise Exception(
+                f"resume_text column missing. Found columns: {self.resumes_df.columns.tolist()}"
+            )
+
+        # Normalize numeric columns so NaNs never leak into float() / json
+        if "experience" in self.resumes_df.columns:
+            self.resumes_df["experience"] = pd.to_numeric(
+                self.resumes_df["experience"], errors="coerce"
+            ).fillna(0)
+        if "salary" in self.resumes_df.columns:
+            self.resumes_df["salary"] = pd.to_numeric(
+                self.resumes_df["salary"], errors="coerce"
+            ).fillna(0)
+
+        self.resume_texts = self.resumes_df["resume_text"].fillna("").astype(str).tolist()
 
         emb=self.model.encode(self.resume_texts,convert_to_numpy=True).astype(np.float32)
 
@@ -37,8 +69,11 @@ class RecruiterRankingSystem:
 
         self.index.add(emb)
 
-        self.metrics_path="data/recruiter_metrics.csv"
-        self.ratings_path="data/recruiter_ratings.csv"
+        # self.metrics_path="data/recruiter_metrics.csv"
+        # self.ratings_path="data/recruiter_ratings.csv"
+        base_dir = os.path.dirname(__file__)
+        self.metrics_path = os.path.join(base_dir, "data", "recruiter_metrics.csv")
+        self.ratings_path = os.path.join(base_dir, "data", "recruiter_ratings.csv")
 
         self.user_profile_vector = None
 
