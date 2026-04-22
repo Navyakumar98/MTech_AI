@@ -118,7 +118,7 @@ const RecruiterModule = () => {
                             <input type="number" min="0" max="20" className="mt-1 block w-full border border-gray-300 rounded-md p-2" value={minExp} onChange={e => setMinExp(parseInt(e.target.value) || 0)} />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Max Salary Allowed ($)</label>
+                            <label className="block text-sm font-medium text-gray-700">Max Salary Allowed </label>
                             <input type="number" min="0" step="5000" className="mt-1 block w-full border border-gray-300 rounded-md p-2" value={maxSalary} onChange={e => setMaxSalary(parseInt(e.target.value) || 0)} />
                         </div>
                     </div>
@@ -161,7 +161,7 @@ const RecruiterModule = () => {
                                     <div key={cand.candidate_id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                                         <div className="flex justify-between items-start mb-4">
                                             <h4 className="text-lg font-bold text-gray-900">Candidate {cand.candidate_id} — {cand.name || 'Unknown'}</h4>
-                                            <span className="text-sm font-medium text-gray-600">Exp: {cand.experience} yrs | Salary: ${cand.salary?.toLocaleString() || 0}</span>
+                                            <span className="text-sm font-medium text-gray-600">Exp: {cand.experience} yrs | Salary: {cand.salary?.toLocaleString() || 0}</span>
                                         </div>
 
                                         <div className="mb-4">

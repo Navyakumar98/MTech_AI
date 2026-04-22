@@ -24,3 +24,15 @@ textarea,
 select {
   font-family: inherit;
 }
+
+input:not([type="range"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  color: #0b1f3a;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
