@@ -198,37 +198,85 @@ const RecruiterModule = () => {
 
                     {/* Enhanced Dashboard */}
                     {enhancedResults && (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <h3 className="text-2xl font-bold text-gray-800 mb-6">Enhanced Recommendations Dashboard</h3>
+                        <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-8">
+                            <h3 className="text-3xl font-extrabold text-blue-900 mb-8 tracking-tight">Enhanced Recommendations Dashboard</h3>
 
-                            <div className="grid md:grid-cols-2 gap-8 mb-8">
+                            <div className="grid md:grid-cols-2 gap-8 mb-2">
+                                {/* LEFT: Ranking Improvement Analysis */}
                                 <div>
-                                    <h4 className="font-bold text-lg mb-4">Ranking Improvement Analysis</h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">NDCG Before: {enhancedResults.metrics.ndcg_before.toFixed(4)}</span>
-                                        <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">NDCG After: {enhancedResults.metrics.ndcg_after.toFixed(4)}</span>
-                                        <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">Improvement: {enhancedResults.metrics.ndcg_improvement.toFixed(4)}</span>
-                                        <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">Spearman: {enhancedResults.metrics.spearman_r.toFixed(4)}</span>
-                                        <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">Re-ranked: {enhancedResults.metrics.reordered_pct}%</span>
+                                    <h4 className="font-extrabold text-xl mb-5 text-blue-900 tracking-tight">Ranking Improvement Analysis</h4>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                                            <div className="w-9 h-9 rounded-lg bg-blue-200/70 flex items-center justify-center shrink-0">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg>
+                                            </div>
+                                            <span className="text-sm font-bold text-blue-900">NDCG Before: {enhancedResults.metrics.ndcg_before.toFixed(4)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                                            <div className="w-9 h-9 rounded-lg bg-blue-200/70 flex items-center justify-center shrink-0">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg>
+                                            </div>
+                                            <span className="text-sm font-bold text-blue-900">NDCG After: {enhancedResults.metrics.ndcg_after.toFixed(4)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                                            <div className="w-9 h-9 rounded-lg bg-blue-200/70 flex items-center justify-center shrink-0">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                            </div>
+                                            <span className="text-sm font-bold text-blue-900">Improvement: {enhancedResults.metrics.ndcg_improvement.toFixed(4)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                                            <div className="w-9 h-9 rounded-lg bg-blue-200/70 flex items-center justify-center shrink-0">
+                                                <span className="text-blue-800 font-extrabold text-lg leading-none">Σ</span>
+                                            </div>
+                                            <span className="text-sm font-bold text-blue-900">Spearman: {enhancedResults.metrics.spearman_r.toFixed(4)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 col-span-2 w-fit">
+                                            <div className="w-9 h-9 rounded-lg bg-blue-200/70 flex items-center justify-center shrink-0">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path><path d="M20.49 15A9 9 0 0 1 5.64 18.36L1 14"></path></svg>
+                                            </div>
+                                            <span className="text-sm font-bold text-blue-900">Re-ranked: {enhancedResults.metrics.reordered_pct}%</span>
+                                        </div>
                                     </div>
                                 </div>
 
+                                {/* RIGHT: Old vs Enhanced */}
                                 <div>
-                                    <h4 className="font-bold text-lg mb-4">Old vs Enhanced (Top Candidates)</h4>
+                                    <h4 className="font-extrabold text-xl mb-5 text-blue-900 tracking-tight">Old vs Enhanced (Top Candidates)</h4>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-orange-50 p-4 rounded-lg">
-                                            <p className="font-bold mb-2">Old (No Feedback)</p>
-                                            <ul className="text-sm space-y-1">
+                                        {/* Old column */}
+                                        <div className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden">
+                                            <div className="bg-blue-900 px-4 py-3 flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                                <p className="font-bold text-white text-sm tracking-tight">Old (No Feedback)</p>
+                                            </div>
+                                            <ul className="p-4 space-y-3">
                                                 {enhancedResults.old_candidates.slice(0, 10).map((c, i) => (
-                                                    <li key={i}>{i+1}. Candidate {c.candidate_id} (score={c.final_score?.toFixed(3)})</li>
+                                                    <li key={i} className="flex items-start gap-3">
+                                                        <span className="w-6 h-6 rounded-md bg-blue-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i+1}</span>
+                                                        <div className="leading-tight">
+                                                            <p className="text-sm font-bold text-blue-900">Candidate {c.candidate_id}</p>
+                                                            <p className="text-xs text-blue-700/80">(score={c.final_score?.toFixed(3)})</p>
+                                                        </div>
+                                                    </li>
                                                 ))}
                                             </ul>
                                         </div>
-                                        <div className="bg-blue-50 p-4 rounded-lg">
-                                            <p className="font-bold mb-2">Enhanced (Feedback)</p>
-                                            <ul className="text-sm space-y-1">
+
+                                        {/* Enhanced column */}
+                                        <div className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden">
+                                            <div className="bg-blue-900 px-4 py-3 flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                                <p className="font-bold text-white text-sm tracking-tight">Enhanced (Feedback)</p>
+                                            </div>
+                                            <ul className="p-4 space-y-3">
                                                 {enhancedResults.new_candidates.slice(0, 10).map((c, i) => (
-                                                    <li key={i}>{i+1}. Candidate {c.candidate_id} (adj={c.final_score?.toFixed(3)})</li>
+                                                    <li key={i} className="flex items-start gap-3">
+                                                        <span className="w-6 h-6 rounded-md bg-blue-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i+1}</span>
+                                                        <div className="leading-tight">
+                                                            <p className="text-sm font-bold text-blue-900">Candidate {c.candidate_id}</p>
+                                                            <p className="text-xs text-blue-700/80">(adj={c.final_score?.toFixed(3)})</p>
+                                                        </div>
+                                                    </li>
                                                 ))}
                                             </ul>
                                         </div>

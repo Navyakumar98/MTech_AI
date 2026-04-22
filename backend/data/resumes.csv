@@ -550,3 +550,102 @@ NIT Nagpur, India
 Achievements
 • Earned ‘Exceeds Expectations’ ratings for two consecutive quarters.
 • Received ‘You Did It’ Award for delivering high-impact, scalable HomeLoan platform enhancements.",javascript;sql;java;c++;python,8,0
+502,MOVVA NAVYA SRI LAKSHMI,6304261675,navyakumar.2259@gmail.com,"MOVVA NAVYA SRI LAKSHMI
+navyakumar.2259@gmail.com — LinkedIn Profile — +91 6304261675
+SUMMARY
+Software Engineer with 2 years of expertise in Java, Spring Boot, REST API development, JavaScript, React JS and MySQL.
+Experienced in all stages of the development cycle for dynamic projects. Proficient in Object-Oriented Programming, Data
+Structures, and Algorithms. Quick to adapt to new technology and duties. Reliable and organized team player with excellent
+communication skills. Seeking opportunities to leverage my skills in a challenging environment.
+WORK EXPERIENCE
+Software Engineer, Magicbricks Realty Services Ltd
+July 2022 - Present
+• Homeloans CRM
+– Integrated third-party Bank API, resulting in a 40% increase in direct home loan leads to banks.
+– Developed the ‘Bank Partnership’ module to streamline adding and updating partnerships between banks
+and Magicbricks, improving operational efficiency.
+– Enhanced the platform with new lead stages like Encashment, Invoicing, and Collection improving faster
+Activity processes.
+– Collaborated with the Experian team to develop registration and OTP verification pages, enhancing the
+user experience for displaying credit reports and increasing leads by 25%.
+– Implemented a communication strategy with promotional, transactional, and event emails and WhatsApp
+messages using Kafka to engage users and improve loyalty.
+• HomeLoan App
+– Collaborated with Android and iOS teams to develop the HomeLoan App and customer dashboard, simpli-
+fying the application process.
+– Built APIs for FOS registration, dashboard, lead tracking, and push to bank, streamlining data exchange
+and workflow.
+• BRE for Developers
+– Developed the user registration module using React JS, improving user onboarding.
+– Created the lead registration module, bank recommendation page, and REST APIs using Spring Boot,
+enhancing lead quality and conversion rates.
+SKILLS
+Programming Languages
+Java, JavaScript
+Frameworks and Tools
+Spring Boot, Spring MVC, Hibernate, React JS, MySQL, Kafka
+Languages
+English, Hindi, Telugu
+EDUCATION
+National Institute Of Technology, Nagpur
+2018-22
+Bachelor of Technology in Computer Science and Engineering, CGPA: 7.45/10
+Chaitanya Junior College, Vijayawada, AP
+2016-18
+Higher Secondary Education, Percentage: 94.6%
+Saint Ann’s School, Vijayawada, AP
+Till 2016
+10th Standard, CGPA: 9.8/10
+ACHIEVEMENTS
+• Consistently received ’Demonstrates Excellence’ or ’Exceeds Expectations’ performance ratings at Magicbricks.",java;sql;react;javascript,2,0
+503,Movva Navya Sri Lakshmi,6304261675,navyakumar.2259@gmail.com,"Movva Navya Sri Lakshmi
+Software Development Engineer 2
+ +91 6304261675
+# navyakumar.2259@gmail.com
+ï linkedin.com/in/movva-navya-sri-lakshmi
+Summary
+Software Development Engineer with 3.8+ years of experience building scalable distributed backend systems for
+transaction-heavy platforms. Strong in data structures, algorithms, OOP, and concurrent programming. Expe
+rienced in designing high-throughput Java (Spring Boot) microservices using Kafka, Redis caching, MongoDB,
+and CI/CD workflows with end-to-end SDLC ownership
+Technical Skills
+Languages: Java (Spring Boot), C++, Python, JavaScript, SQL
+Databases: MySQL, MongoDB (Sharding, Replication), Redis
+Technologies: Apache Kafka, Microservices, REST APIs, Event-Driven Systems
+Concepts: Data Structures & Algorithms, OOP, Concurrency
+Tools: Git, Maven, Gradle, Jenkins (CI/CD), JUnit
+Work Experience
+Assistant Manager 1 (SDE 2)
+Oct 2024 – Present
+Magicbricks Realty Services Ltd, India
+Homeloans CRM
+• Led high-level and low-level design of scalable Java (Spring Boot) microservices handling 20K+ monthly
+transactions.
+• Implemented Encashment, Invoicing, and Collection workflows, reducing lead cycle time by 35% and manual
+follow-ups by 50%.
+• Built Kafka-driven event pipelines with concurrent processing, improving response time by 30%.
+• Integrated secure third-party REST APIs (Experian, Banking partners) with OTP validation, increasing
+qualified leads by 25%.
+• Conducted code reviews, mentored junior engineers, and enforced SOLID principles to maintain modular
+and extensible architecture.
+HomeLoan Platform
+• Integrated third-party banking APIs, increasing direct home loan leads by 40%.
+• Optimized services using Redis caching and indexing, improving latency by 30% in Agile CI/CD environment.
+Assistant Manager 2 (SDE 1)
+July 2022 – Sep 2024
+Magicbricks Realty Services Ltd, India
+HomeLoan App
+• Owned end-to-end SDLC including design, development, testing, deployment, and production support of
+RESTful microservices.
+• Improved throughput by 40% and reduced latency by 60% through optimized data structures and asyn-
+chronous processing.
+• Implemented Redis caching and MongoDB sharding to scale increasing transaction volumes.
+Home Interiors & BRE & Site Visit
+• Optimized backend data flow using efficient data structures, increasing processing efficiency by 20%.
+Education
+B.Tech in Computer Science and Engineering
+2018 – 2022
+NIT Nagpur, India
+Achievements
+• Earned ‘Exceeds Expectations’ ratings for two consecutive quarters.
+• Received ‘You Did It’ Award for delivering high-impact, scalable HomeLoan platform enhancements.",python;c++;java;sql;javascript,8,0
