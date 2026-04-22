@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RoleSelection from './components/RoleSelection';
-// import UploadForm from './components/JobSeeker/UploadForm';
-// import RecruiterForm from './components/Recruiter/RecruiterForm';
-// import AuthForm from './components/AuthForm';
 import AuthFormNew from './components/AuthFormNew';
 import Home from './components/Home';
 import About from './components/About';
@@ -68,7 +65,6 @@ const App = () => {
 
         {/* Protected Routes */}
         <Route path="/select-role" element={role === 'admin' ? <RoleSelection /> : <Navigate to="/auth" />} />
-        {/* Updated routes mapping to our newly created React Streamlit-like modules */}
         <Route path="/jobseeker" element={role === 'jobSeeker' || role === 'admin' ? <JobseekerModule /> : <Navigate to="/auth" />} />
         <Route path="/recruiter" element={role === 'recruiter' || role === 'admin' ? <RecruiterModule /> : <Navigate to="/auth" />} />
       </Routes>
