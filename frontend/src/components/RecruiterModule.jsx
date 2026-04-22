@@ -17,7 +17,7 @@ const RecruiterModule = () => {
         const file = e.target.files[0];
         if (!file) return;
         const formData = new FormData();
-        formData.append('resume', file); // Reuse extract endpoint as it just extracts pdf text
+        formData.append('resume', file); 
         setLoading(true);
         try {
             const res = await axios.post('http://localhost:5000/api/jobseeker/extract', formData);

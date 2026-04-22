@@ -141,13 +141,7 @@ class JobRecommendationSystem:
         location_weight: float = 0.1, salary_weight: float = 0.1, experience_weight: float = 0.1,
         user_location: str = "", user_salary: str = "", user_experience: str = ""
     ):
-        """
-        Recommend jobs for a given resume.
-        If use_feedback=True and ratings exist, apply feedback-driven re-ranking with:
-          - adaptive resume vs feedback blending
-          - small skill-overlap boost
-        Returns dict with 'recommended_jobs' (list of dict rows).
-        """
+      
         resume_text = self.clean_text(resume_text)
         resume_quality = self._calculate_resume_quality(resume_text)
 

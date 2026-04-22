@@ -70,7 +70,9 @@ class JobRecommendationSystem:
         self.user_profile_vector = None
 
         # Metrics log path
-        self.metrics_path = os.path.join("data", "metrics.csv")
+        # self.metrics_path = os.path.join("data", "metrics.csv")
+        base_dir = os.path.dirname(__file__)
+        self.metrics_path = os.path.join(base_dir, "data", "metrics.csv")
 
     # -------------------- Helpers --------------------
     def clean_text(self, text: str) -> str:
@@ -92,11 +94,15 @@ class JobRecommendationSystem:
             self.job_embeddings[top_indices],
         )
 
-    def load_feedback_embeddings(self, feedback_file: str = "data/ratings.csv"):
+    # def load_feedback_embeddings(self, feedback_file: str = "data/ratings.csv"):
+    def load_feedback_embeddings(self, feedback_file: str = None):
         """
         Load ratings and return (embeddings, ratings, merged_df).
         - ratings must be numeric (1..5)
         """
+        if feedback_file is None:
+            feedback_file = os.path.join(os.path.dirname(__file__), "data", "ratings.csv")
+
         if not os.path.exists(feedback_file):
             return None, None, None
 
