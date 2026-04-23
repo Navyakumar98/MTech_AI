@@ -47,7 +47,15 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-subtle">
+        <div className="flex items-center gap-3 text-ink-500 text-sm">
+          <span className="w-4 h-4 rounded-full border-2 border-ink-200 border-t-brand-accent animate-spin" />
+          Loading JobFusion…
+        </div>
+      </div>
+    );
 
   return (
     <>

@@ -1,42 +1,73 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const RoleCard = ({ title, desc, onClick, icon, accent }) => (
+  <button
+    onClick={onClick}
+    className="group relative text-left bg-white rounded-2xl border border-ink-100 shadow-card hover:shadow-pop hover:-translate-y-0.5 transition-all p-6 w-full md:w-72"
+  >
+    <div className={`w-11 h-11 rounded-xl ${accent} flex items-center justify-center mb-5`}>
+      {icon}
+    </div>
+    <h3 className="text-lg font-semibold text-ink-900 mb-1.5">{title}</h3>
+    <p className="text-sm text-ink-500 leading-relaxed">{desc}</p>
+    <div className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-brand-accent">
+      Continue
+      <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </div>
+  </button>
+);
+
 const RoleSelection = () => {
   const navigate = useNavigate();
-
   const handleSelect = (role) => {
     if (role === 'jobseeker') navigate('/jobseeker');
     else if (role === 'recruiter') navigate('/recruiter');
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-blue-900 via-purple-900 to-black text-white">
-      {/* Blobs */}
-      <div className="absolute top-0 left-0 w-72 h-72 bg-purple-600 rounded-full opacity-30 animate-pulse blur-2xl"></div>
-      <div className="absolute bottom-0 right-0 w-72 h-72 bg-blue-600 rounded-full opacity-30 animate-ping blur-2xl"></div>
-
-      <h2 className="text-4xl font-bold mb-10 z-10 animate-fade-in">
-        👋 Choose Your Role
-      </h2>
-
-      <div className="flex flex-col sm:flex-row gap-10 z-10">
-        {/* Job Seeker Card */}
-        <div
-          onClick={() => handleSelect('jobseeker')}
-          className="w-64 h-40 bg-blue-700 hover:bg-blue-800 text-white rounded-xl shadow-xl transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center text-xl font-semibold"
-        >
-          🚀 Job Seeker
+    <div className="relative min-h-screen bg-surface-subtle pt-28 pb-20 px-6 flex flex-col items-center overflow-hidden">
+      <div className="absolute inset-0 jf-grid-bg opacity-50 pointer-events-none" />
+      <div className="relative text-center max-w-xl jf-fade-up">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-ink-100 shadow-card text-xs font-medium text-ink-600 mb-5">
+          Choose your workspace
         </div>
-
-        {/* Recruiter Card */}
-        <div
-          onClick={() => handleSelect('recruiter')}
-          className="w-64 h-40 bg-green-700 hover:bg-green-800 text-white rounded-xl shadow-xl transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center text-xl font-semibold"
-        >
-          🧑‍💼 Recruiter
-        </div>
+        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-ink-900">
+          How would you like to use JobFusion?
+        </h1>
+        <p className="mt-3 text-ink-500">
+          Pick a role to open the right workspace — you can switch anytime.
+        </p>
       </div>
 
+      <div className="relative mt-12 flex flex-col md:flex-row gap-5">
+        <RoleCard
+          title="Job Seeker"
+          desc="Upload your resume, tune preferences, and get ranked matches with AI feedback."
+          onClick={() => handleSelect('jobseeker')}
+          accent="bg-brand-accentSoft text-brand-accent"
+          icon={
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="7" r="4" />
+              <path d="M4 21v-1a8 8 0 0 1 16 0v1" />
+            </svg>
+          }
+        />
+        <RoleCard
+          title="Recruiter"
+          desc="Paste a JD, rank candidates, filter by fit, and export a polished shortlist."
+          onClick={() => handleSelect('recruiter')}
+          accent="bg-navy-50 text-navy-700"
+          icon={
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          }
+        />
+      </div>
     </div>
   );
 };
