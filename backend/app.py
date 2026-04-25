@@ -34,17 +34,20 @@ def _build_cors_origins():
     explicit = [o.strip() for o in raw.split(",") if o.strip()]
     origins.extend(explicit)
 
-    if not explicit and not is_production:
-        single = os.environ.get("FRONTEND_ORIGIN")
-        if single:
-            origins.append(single.strip())
+    single = os.environ.get("FRONTEND_ORIGIN", "").strip()
+    if single and single not in origins:
+        origins.append(single)
 
     return origins
 
 
+_CORS_ORIGINS = _build_cors_origins()
+print(f"[app] CORS allowed origins: {_CORS_ORIGINS}", flush=True)
+
+
 CORS(
     app,
-    resources={r"/api/*": {"origins": _build_cors_origins()}},
+    resources={r"/api/*": {"origins": _CORS_ORIGINS}},
     supports_credentials=False,
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
