@@ -51,7 +51,7 @@ const Home = ({ user, role }) => {
 
             <p className="mt-6 text-lg text-ink-500 max-w-xl leading-relaxed">
               JobFusion uses feedback-aware ranking to surface the best job matches
-              for candidates and the best candidates for recruiters — in seconds.
+              for candidates and the best candidates for recruiters - in seconds.
             </p>
 
             <div className="mt-8 flex items-center gap-3">
@@ -89,7 +89,7 @@ const Home = ({ user, role }) => {
             Everything you need to match talent with opportunity
           </h2>
           <p className="mt-3 text-ink-500 leading-relaxed">
-            One intelligent workspace for both sides of the hiring equation —
+            One intelligent workspace for both sides of the hiring equation -
             built on semantic search, ATS scoring, and feedback-aware re-ranking.
           </p>
         </div>
@@ -103,12 +103,12 @@ const Home = ({ user, role }) => {
           <FeatureCard
             icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>}
             title="Smart Job Matching"
-            desc="Personalized recommendations weighted by your location, salary, and experience preferences — not just keywords."
+            desc="Personalized recommendations weighted by your location, salary, and experience preferences - not just keywords."
           />
           <FeatureCard
             icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
             title="Recruiter Workspace"
-            desc="Rank thousands of resumes against any JD. Filter, re-rank with feedback, and export — all in one dashboard."
+            desc="Rank thousands of resumes against any JD. Filter, re-rank with feedback, and export - all in one dashboard."
           />
           <FeatureCard
             icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>}

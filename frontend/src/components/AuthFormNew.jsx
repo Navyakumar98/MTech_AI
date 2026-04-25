@@ -214,7 +214,7 @@ const AuthFormNew = () => {
             <p className="mt-1 text-sm text-ink-500">
               {isLogin
                 ? 'Log in to continue to your JobFusion workspace.'
-                : 'A few details and you’re in — it takes less than a minute.'}
+                : 'A few details and you’re in - it takes less than a minute.'}
             </p>
           </div>
 

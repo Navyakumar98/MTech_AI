@@ -26,7 +26,7 @@ const About = () => {
           </h1>
           <p className="mt-5 text-ink-500 leading-relaxed">
             JobFusion is an AI-powered platform that connects talented candidates
-            with the right opportunities — and helps recruiters find the right
+            with the right opportunities - and helps recruiters find the right
             people, faster. It combines semantic matching, ATS scoring, and
             feedback-aware re-ranking into one elegant workspace.
           </p>
@@ -41,7 +41,7 @@ const About = () => {
           <Bullet
             icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>}
             title="Job Recommendations"
-            desc="Jobs ranked by location, salary, and experience fit — weighted the way you care about them."
+            desc="Jobs ranked by location, salary, and experience fit - weighted the way you care about them."
           />
           <Bullet
             icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>}
