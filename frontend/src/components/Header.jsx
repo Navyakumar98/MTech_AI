@@ -5,10 +5,10 @@ import { getAuth, signOut } from 'firebase/auth';
 const NavLink = ({ to, children, active }) => (
   <Link
     to={to}
-    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
       active
         ? 'text-white bg-white/10'
-        : 'text-white/80 hover:text-white hover:bg-white/10'
+        : 'text-white/80 hover:text-white hover:bg-navy-500/70 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14)]'
     }`}
   >
     {children}
@@ -64,7 +64,7 @@ const Header = ({ user }) => {
               </div>
               <button
                 onClick={handleLogout}
-                className="text-sm font-medium text-white/80 hover:text-white px-3 py-1.5 rounded-md hover:bg-white/10 transition-colors"
+                className="text-sm font-medium text-white/80 hover:text-white px-3 py-1.5 rounded-md hover:bg-navy-500/70 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14)] transition-all duration-200"
               >
                 Log out
               </button>
@@ -73,13 +73,13 @@ const Header = ({ user }) => {
             <>
               <Link
                 to="/auth"
-                className="text-sm font-medium text-white/80 hover:text-white px-3 py-1.5 rounded-md hover:bg-white/10 transition-colors"
+                className="text-sm font-medium text-white/80 hover:text-white px-3 py-1.5 rounded-md hover:bg-navy-500/70 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14)] transition-all duration-200"
               >
                 Log in
               </Link>
               <Link
                 to="/auth"
-                className="text-sm font-semibold text-navy-800 bg-white px-3.5 py-1.5 rounded-md hover:bg-blue-50 transition-colors shadow-sm"
+                className="text-sm font-semibold text-navy-800 bg-white px-3.5 py-1.5 rounded-md hover:bg-navy-50 hover:text-navy-700 hover:shadow-[0_8px_18px_-12px_rgba(45,79,163,0.55)] transition-all duration-200 shadow-sm"
               >
                 Get started
               </Link>

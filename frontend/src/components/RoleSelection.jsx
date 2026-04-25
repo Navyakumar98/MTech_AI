@@ -4,14 +4,15 @@ import { useNavigate } from 'react-router-dom';
 const RoleCard = ({ title, desc, onClick, icon, accent }) => (
   <button
     onClick={onClick}
-    className="group relative text-left bg-white rounded-2xl border border-ink-100 shadow-card hover:shadow-pop hover:-translate-y-0.5 transition-all p-6 w-full md:w-72"
+    className="group relative overflow-hidden text-left bg-white rounded-2xl border border-ink-100 shadow-card hover:border-navy-300 hover:shadow-[0_16px_32px_-16px_rgba(45,79,163,0.45)] hover:-translate-y-0.5 transition-all duration-300 p-6 w-full md:w-72"
   >
+    <div className="pointer-events-none absolute inset-0 rounded-2xl bg-transparent group-hover:bg-[linear-gradient(180deg,rgba(45,79,163,0.07),rgba(45,79,163,0.015))] transition-colors duration-300" />
     <div className={`w-11 h-11 rounded-xl ${accent} flex items-center justify-center mb-5`}>
       {icon}
     </div>
     <h3 className="text-lg font-semibold text-ink-900 mb-1.5">{title}</h3>
     <p className="text-sm text-ink-500 leading-relaxed">{desc}</p>
-    <div className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-brand-accent">
+    <div className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-navy-600 group-hover:text-navy-500 transition-colors">
       Continue
       <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
     </div>
