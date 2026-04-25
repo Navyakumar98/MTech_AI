@@ -13,3 +13,4 @@ torch
 sentence-transformers
 faiss-cpu
 PyMuPDF
+gunicorn
