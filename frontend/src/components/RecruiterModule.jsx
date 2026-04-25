@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import axios from 'axios';
+import { buildApiUrl } from '../config/api';
 
 /* ---------- Icons ---------- */
 
@@ -186,7 +187,7 @@ const RecruiterModule = () => {
     formData.append('resume', file);
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/jobseeker/extract', formData);
+      const res = await axios.post(buildApiUrl('/api/jobseeker/extract'), formData);
       setJdText(res.data.text);
       setJdId(res.data.resume_id);
     } catch (err) {
@@ -214,7 +215,7 @@ const RecruiterModule = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/recruiter/rank', {
+      const res = await axios.post(buildApiUrl('/api/recruiter/rank'), {
         jd_text: jdText,
         top_k: topK,
         min_exp: minExp,
@@ -236,7 +237,7 @@ const RecruiterModule = () => {
     if (!jdText.trim()) return;
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/recruiter/enhance', {
+      const res = await axios.post(buildApiUrl('/api/recruiter/enhance'), {
         jd_text: jdText,
         jd_id: jdId,
         top_k: topK,
@@ -256,7 +257,7 @@ const RecruiterModule = () => {
   const submitRating = async (candidateId) => {
     const rating = ratings[candidateId] || 3;
     try {
-      await axios.post('http://localhost:5000/api/recruiter/rate', {
+      await axios.post(buildApiUrl('/api/recruiter/rate'), {
         jd_id: jdId,
         candidate_id: candidateId,
         rating,
