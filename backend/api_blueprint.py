@@ -3,8 +3,6 @@ import fitz
 import re
 import pandas as pd
 from flask import Blueprint, request, jsonify
-from ai_model import JobRecommendationSystem
-from ai_recruiter_model import RecruiterRankingSystem
 
 api_bp = Blueprint('api', __name__)
 
@@ -12,6 +10,22 @@ recommender = None
 ranking_system = None
 _recommender_err = None
 _ranking_err = None
+_job_recommendation_cls = None
+_recruiter_ranking_cls = None
+
+
+def _load_model_classes():
+    """
+    Import ML classes only when needed.
+    This keeps app startup lightweight so the web process can bind PORT first.
+    """
+    global _job_recommendation_cls, _recruiter_ranking_cls
+    if _job_recommendation_cls is None:
+        from ai_model import JobRecommendationSystem
+        _job_recommendation_cls = JobRecommendationSystem
+    if _recruiter_ranking_cls is None:
+        from ai_recruiter_model import RecruiterRankingSystem
+        _recruiter_ranking_cls = RecruiterRankingSystem
 
 
 def _find_jobs_csv():
@@ -124,23 +138,25 @@ def init_models():
 
     if recommender is None and _recommender_err is None:
         try:
+            _load_model_classes()
             jobs_csv = _find_jobs_csv()
             if jobs_csv is None:
                 raise FileNotFoundError(
                     "JobsFE.csv not found. Place it at backend/JobsFE.csv "
                     "(or backend/data/JobsFE.csv). This file is gitignored."
                 )
-            recommender = JobRecommendationSystem(jobs_csv)
+            recommender = _job_recommendation_cls(jobs_csv)
         except Exception as e:
             _recommender_err = str(e)
             print("Failed to load JobRecommendationSystem:", e)
 
     if ranking_system is None and _ranking_err is None:
         try:
+            _load_model_classes()
             resumes_csv = os.path.join(base_dir, "data", "resumes.csv")
             if not os.path.exists(resumes_csv):
                 raise FileNotFoundError(f"resumes.csv not found at {resumes_csv}")
-            ranking_system = RecruiterRankingSystem(os.path.join("data", "resumes.csv"))
+            ranking_system = _recruiter_ranking_cls(os.path.join("data", "resumes.csv"))
         except Exception as e:
             _ranking_err = str(e)
             print("Failed to load RecruiterRankingSystem:", e)
