@@ -140,8 +140,6 @@ def init_models():
             resumes_csv = os.path.join(base_dir, "data", "resumes.csv")
             if not os.path.exists(resumes_csv):
                 raise FileNotFoundError(f"resumes.csv not found at {resumes_csv}")
-            # RecruiterRankingSystem re-joins the path with its module dir,
-            # so we pass a relative path.
             ranking_system = RecruiterRankingSystem(os.path.join("data", "resumes.csv"))
         except Exception as e:
             _ranking_err = str(e)
@@ -173,7 +171,6 @@ def extract_text_from_pdf(file_obj):
     text = "\n".join([page.get_text("text") for page in doc])
     return text.strip()
 
-# RATINGS_DIR = "data"
 RATINGS_DIR = os.path.join(os.path.dirname(__file__), "data")
 RATINGS_PATH = os.path.join(RATINGS_DIR, "ratings.csv")
 RECRUITER_RATINGS_PATH = os.path.join(RATINGS_DIR, "recruiter_ratings.csv")
@@ -262,8 +259,6 @@ def save_resume_for_recruiter(resume_text):
         "salary": 0,
     }
     df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
-    # Fill any NaNs introduced by column mismatch so downstream float() calls
-    # don't choke and jsonify doesn't emit NaN.
     if "salary" in df.columns:
         df["salary"] = df["salary"].fillna(0)
     if "experience" in df.columns:
@@ -333,7 +328,6 @@ def enhance():
         return jsonify({"error": "Missing resume text"}), 400
     try:
         res = recommender.retrain_with_feedback(data['resume_text'], top_n=20)
-        # The comparison DataFrame is not JSON serializable — drop it.
         res.pop("comparison", None)
         return jsonify(res)
     except Exception as e:
@@ -418,7 +412,6 @@ def enhance_recruiter():
             min_experience=float(data.get('min_exp', 0) or 0),
             max_salary=max_salary
         )
-        # DataFrame isn't JSON serializable
         res.pop("comparison", None)
         return jsonify(res)
     except Exception as e:

@@ -8,9 +8,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import ndcg_score
 
-# -------------------- EMBEDDING MODEL (loaded once) --------------------
 MODEL = SentenceTransformer("paraphrase-MiniLM-L6-v2", device="cpu")
-# Optional lightweight speedup on CPU
 MODEL = torch.quantization.quantize_dynamic(MODEL, {torch.nn.Linear}, dtype=torch.qint8)
 
 
@@ -46,7 +44,6 @@ class JobRecommendationSystem:
             raise FileNotFoundError(f"Jobs CSV not found: {jobs_csv}")
 
         self.jobs_df = pd.read_csv(jobs_csv)
-        # Unified text field for embedding
         self.jobs_df["job_text"] = (
             self.jobs_df["workplace"].astype(str) + " " +
             self.jobs_df["working_mode"].astype(str) + " " +
@@ -58,23 +55,17 @@ class JobRecommendationSystem:
         self.job_info = self.jobs_df.copy()
         self.jobs_texts = self.jobs_df["job_text"].tolist()
 
-        # Precompute job embeddings
         self.job_embeddings = MODEL.encode(self.jobs_texts, convert_to_numpy=True).astype(np.float16)
 
-        # FAISS index (inner product)
         self.dim = int(self.job_embeddings.shape[1])
         self.index = faiss.IndexFlatIP(self.dim)
         self.index.add(self.job_embeddings.astype(np.float16))
 
-        # Cache: user profile vector learned from feedback
         self.user_profile_vector = None
 
-        # Metrics log path
-        # self.metrics_path = os.path.join("data", "metrics.csv")
         base_dir = os.path.dirname(__file__)
         self.metrics_path = os.path.join(base_dir, "data", "metrics.csv")
 
-    # -------------------- Helpers --------------------
     def clean_text(self, text: str) -> str:
         return text.lower().translate(str.maketrans("", "", string.punctuation)).strip()
 
@@ -94,7 +85,6 @@ class JobRecommendationSystem:
             self.job_embeddings[top_indices],
         )
 
-    # def load_feedback_embeddings(self, feedback_file: str = "data/ratings.csv"):
     def load_feedback_embeddings(self, feedback_file: str = None):
         """
         Load ratings and return (embeddings, ratings, merged_df).
@@ -110,13 +100,11 @@ class JobRecommendationSystem:
         if df.empty or "rating" not in df.columns:
             return None, None, None
 
-        # Ensure numeric ratings and string ids for join safety
         df = df[df["rating"].astype(str).str.isnumeric()].copy()
         if df.empty:
             return None, None, None
         df["rating"] = df["rating"].astype(float)
 
-        # Join with job info to build embeddings for rated jobs
         merged = pd.merge(df, self.job_info, left_on="job_id", right_on="Job Id", how="inner")
         if merged.empty:
             return None, None, None
@@ -138,10 +126,9 @@ class JobRecommendationSystem:
         Adaptive blend between resume similarity (alpha) and feedback (1-alpha).
         - Start at alpha≈0.9 with few ratings; decay to 0.5 as ratings grow.
         """
-        alpha = 0.9 - 0.04 * n_ratings  # each rating reduces resume weight by 0.04
+        alpha = 0.9 - 0.04 * n_ratings
         return float(np.clip(alpha, 0.5, 0.9))
 
-    # -------------------- Core recommend --------------------
     def recommend_jobs(
         self, resume_text: str, top_n: int = 20, use_feedback: bool = True,
         location_weight: float = 0.1, salary_weight: float = 0.1, experience_weight: float = 0.1,
@@ -157,27 +144,22 @@ class JobRecommendationSystem:
         resume_text = self.clean_text(resume_text)
         resume_quality = self._calculate_resume_quality(resume_text)
 
-        # TF-IDF prefilter
         filtered_texts, filtered_df, filtered_embeds = self.filter_top_jobs(
             resume_text, top_n=max(100, top_n * 3)
         )
 
-        # Embed resume
         resume_embedding = MODEL.encode([resume_text], convert_to_numpy=True).astype(np.float16)
 
-        # FAISS over filtered set
         index = faiss.IndexFlatIP(self.dim)
         index.add(filtered_embeds.astype(np.float16))
         distances, indices = index.search(resume_embedding.astype(np.float16), top_n)
 
-        # Normalize base similarities to [0,1]
         base_sims = distances[0]
         sims_norm = (base_sims - base_sims.min()) / (base_sims.max() - base_sims.min() + 1e-9)
 
         recs = filtered_df.iloc[indices[0]].copy()
         recs["similarity"] = sims_norm
 
-        # Skill overlap (simple token intersection)
         resume_words = set(resume_text.split())
         recs["matched_skills"] = recs["requisite_skill"].apply(
             lambda x: ", ".join(list(resume_words.intersection(set(str(x).split())))[:8])
@@ -190,32 +172,25 @@ class JobRecommendationSystem:
             recs["adjusted_score"] = recs["similarity"]
             return {"recommended_jobs": recs.to_dict(orient="records"), "resume_quality": resume_quality}
 
-        # Feedback-driven personalization
         rated_embeds, ratings, _ = self.load_feedback_embeddings()
         if rated_embeds is None:
             recs["adjusted_score"] = recs["similarity"]
             return {"recommended_jobs": recs.to_dict(orient="records"), "resume_quality": resume_quality}
 
-        # Weighted user preferences vector
         norm_r = (ratings - ratings.min()) / (ratings.max() - ratings.min() + 1e-9)
         user_vec = np.average(rated_embeds, axis=0, weights=norm_r).astype(np.float16)
-        self.user_profile_vector = user_vec  # cache for later
+        self.user_profile_vector = user_vec
 
-        # Cosine similarity to user preference for the selected items
         filtered_sel = filtered_embeds[indices[0]]
         up_sim = np.dot(filtered_sel, user_vec) / (
             np.linalg.norm(filtered_sel, axis=1) * np.linalg.norm(user_vec) + 1e-9
         )
 
-        # Adaptive weighting between resume similarity and user preference
-        alpha = self._alpha_from_num_ratings(len(ratings))          # resume weight
-        beta = 1.0 - alpha                                          # feedback weight
+        alpha = self._alpha_from_num_ratings(len(ratings))
+        beta = 1.0 - alpha
 
-        # Small skill-overlap boost (cap count at 5 so boost <= 0.1)
-        # Rationale: reward explicit skill matches without overpowering semantics
         skill_boost = 0.02 * np.minimum(recs["skill_overlap"].to_numpy(dtype=float), 5.0)
 
-        # Location, Salary, and Experience Scores
         recs["location_score"] = recs["workplace"].apply(lambda x: self._calculate_location_score(x, user_location))
         recs["salary_score"] = recs["salary"].apply(lambda x: self._calculate_salary_score(x, user_salary))
         recs["experience_score"] = recs["requisite_skill"].apply(lambda x: self._calculate_experience_score(x, user_experience))
@@ -231,7 +206,6 @@ class JobRecommendationSystem:
             )
             recs = recs.sort_values(by="adjusted_score", ascending=False)
         except KeyError:
-            # If any of the score columns are missing, return an empty list
             return {"recommended_jobs": [], "resume_quality": resume_quality}
         return {"recommended_jobs": recs.to_dict(orient="records"), "resume_quality": resume_quality}
 
@@ -242,38 +216,30 @@ class JobRecommendationSystem:
         - Keyword diversity (rewards richness)
         Returns a score in [0, 1].
         """
-        # Normalize text
         clean_text = self.clean_text(resume_text)
         words = clean_text.split()
 
-        # 1. Text Length Score
-        # Target a "sweet spot" length (e.g., 250-750 words)
         word_count = len(words)
         if word_count < 150:
             length_score = 0.2
         elif word_count <= 250:
             length_score = 0.5
         elif word_count <= 750:
-            length_score = 1.0  # Ideal length
+            length_score = 1.0
         else:
-            length_score = 0.7  # Too long
+            length_score = 0.7
 
-        # 2. Keyword Diversity Score
-        # Presence of common professional sections/keywords
         keywords = {
             "experience", "education", "skills", "projects",
             "summary", "objective", "achievements", "contact",
             "linkedin", "github"
         }
         found_keywords = sum(1 for keyword in keywords if keyword in clean_text)
-        diversity_score = min(found_keywords / 6.0, 1.0)  # Cap at 6 keywords for max score
+        diversity_score = min(found_keywords / 6.0, 1.0)
 
-        # 3. Quantifiable Achievements
-        # Presence of numbers/metrics (e.g., "increased sales by 20%")
         num_count = sum(1 for word in words if word.isdigit())
-        metrics_score = min(num_count / 5.0, 1.0) # Cap at 5 numbers for max score
+        metrics_score = min(num_count / 5.0, 1.0)
 
-        # Final weighted score
         final_score = (0.4 * length_score) + (0.4 * diversity_score) + (0.2 * metrics_score)
         return round(final_score, 2)
 
@@ -300,13 +266,12 @@ class JobRecommendationSystem:
         user_s = int(user_salary)
         job_s_str = str(job_salary).lower().replace(",", "").replace("$", "")
 
-        # Extract max salary from various formats
         max_salary = 0
         if "up to" in job_s_str:
             parts = job_s_str.split("up to")
             if len(parts) > 1 and parts[1].strip().isdigit():
                 max_salary = int(parts[1].strip())
-        elif "-" in job_s_str: # Range
+        elif "-" in job_s_str:
             parts = job_s_str.split("-")
             if len(parts) > 1 and parts[1].strip().isdigit():
                 max_salary = int(parts[1].strip())
@@ -316,7 +281,6 @@ class JobRecommendationSystem:
         if max_salary == 0:
             return 0.0
 
-        # Score based on ratio, capped at 1.0 (meeting desire is a full score)
         score = min(max_salary / user_s, 1.0)
         return score
 
@@ -333,23 +297,20 @@ class JobRecommendationSystem:
         user_exp = int(user_experience)
         job_exp_str = str(job_experience).lower()
 
-        # Find numbers that might represent years of experience
         import re
         found_nums = re.findall(r'(\d+)\+?\s*years', job_exp_str)
         if not found_nums:
-            return 0.2  # Neutral score if no explicit requirement found
+            return 0.2
 
         required_exp = max([int(n) for n in found_nums])
 
-        # Compare and score
         if user_exp >= required_exp:
             return 1.0
-        elif user_exp >= required_exp - 2: # Within 2 years
+        elif user_exp >= required_exp - 2:
             return 0.5
         else:
             return 0.0
 
-    # -------------------- Retrain / Evaluate --------------------
     def retrain_with_feedback(self, resume_text: str, top_n: int = 20):
         """
         Compare old vs enhanced results and compute metrics:
@@ -358,36 +319,28 @@ class JobRecommendationSystem:
           - Reordered % (how many items changed position among common ids)
         Returns dict with lists and metrics, and logs metrics to data/metrics.csv.
         """
-        # Old: no feedback
         old_results = self.recommend_jobs(resume_text, top_n=top_n, use_feedback=False)
         old = pd.DataFrame(old_results["recommended_jobs"])
-        # New: with feedback
         new_results = self.recommend_jobs(resume_text, top_n=top_n, use_feedback=True)
         new = pd.DataFrame(new_results["recommended_jobs"])
 
-        # Align on Job Id to compare scores directly
         comp = old[["Job Id", "position", "similarity"]].merge(
             new[["Job Id", "adjusted_score"]], on="Job Id", how="outer"
         )
 
-        # Metrics (fill NAs with 0 for fair comparison)
         y_true = comp["similarity"].fillna(0).to_numpy()
         y_score = comp["adjusted_score"].fillna(0).to_numpy()
 
-        # NDCG@top_n
         ndcg = float(ndcg_score([y_true], [y_score]))
 
-        # Spearman rank correlation
         spear = _spearman_r(y_true, y_score)
 
-        # Reordered percentage (by job id order change)
         old_order = {jid: i for i, jid in enumerate(old["Job Id"].tolist())}
         new_order = {jid: i for i, jid in enumerate(new["Job Id"].tolist())}
         common_ids = [jid for jid in old_order if jid in new_order]
         moved = sum(1 for jid in common_ids if old_order[jid] != new_order[jid])
         reordered_pct = (moved / max(1, len(common_ids))) * 100.0
 
-        # Log metrics over time
         _ensure_data_dir(self.metrics_path)
         log_row = pd.DataFrame([{
             "timestamp": pd.Timestamp.now().isoformat(),
@@ -408,7 +361,7 @@ class JobRecommendationSystem:
         return {
             "old_jobs": old.to_dict(orient="records"),
             "new_jobs": new.to_dict(orient="records"),
-            "comparison": comp,  # DataFrame
+            "comparison": comp,
             "metrics": {
                 "ndcg_at_k": round(ndcg, 3),
                 "spearman_r": round(float(spear), 3),
@@ -426,10 +379,8 @@ class JobRecommendationSystem:
             return pd.DataFrame(columns=full_schema)
         try:
             df = pd.read_csv(self.metrics_path, header=None)
-            # Assign columns based on the number of columns found in the file
             num_cols = len(df.columns)
             df.columns = full_schema[:num_cols]
-            # Ensure all columns from the schema are present
             for col in full_schema:
                 if col not in df.columns:
                     df[col] = pd.NA

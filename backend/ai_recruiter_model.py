@@ -23,10 +23,6 @@ class RecruiterRankingSystem:
 
         self.model=get_model()
 
-        # self.resumes_df=pd.read_csv(resumes_csv)
-
-        # self.resume_texts=self.resumes_df["resume_text"].astype(str).tolist()
-
         base_dir = os.path.dirname(__file__)
         csv_path = os.path.join(base_dir, resumes_csv)
 
@@ -37,7 +33,6 @@ class RecruiterRankingSystem:
             skipinitialspace=True
         )
 
-        # remove hidden spaces in headers
         self.resumes_df.columns = self.resumes_df.columns.str.strip()
 
         print("Loaded Resume CSV Columns:", self.resumes_df.columns.tolist())
@@ -47,7 +42,6 @@ class RecruiterRankingSystem:
                 f"resume_text column missing. Found columns: {self.resumes_df.columns.tolist()}"
             )
 
-        # Normalize numeric columns so NaNs never leak into float() / json
         if "experience" in self.resumes_df.columns:
             self.resumes_df["experience"] = pd.to_numeric(
                 self.resumes_df["experience"], errors="coerce"
@@ -69,8 +63,6 @@ class RecruiterRankingSystem:
 
         self.index.add(emb)
 
-        # self.metrics_path="data/recruiter_metrics.csv"
-        # self.ratings_path="data/recruiter_ratings.csv"
         base_dir = os.path.dirname(__file__)
         self.metrics_path = os.path.join(base_dir, "data", "recruiter_metrics.csv")
         self.ratings_path = os.path.join(base_dir, "data", "recruiter_ratings.csv")
@@ -114,14 +106,12 @@ class RecruiterRankingSystem:
             return None, None, None
         df["rating"] = df["rating"].astype(float)
 
-        # Filter for current JD if jd_id is provided
         if jd_id is not None:
             df = df[df["jd_id"].astype(str) == str(jd_id)]
 
         if df.empty:
             return None, None, None
 
-        # Join with resume info
         df["candidate_id"] = df["candidate_id"].astype(str)
         resumes = self.resumes_df.copy()
         resumes["candidate_id"] = resumes["candidate_id"].astype(str)
@@ -171,7 +161,6 @@ class RecruiterRankingSystem:
             if exp<min_experience:
                 continue
 
-            # Default to high max salary if not provided
             if max_salary is not None and max_salary > 0:
                 salary = float(cand.get("salary", 0))
                 if salary > max_salary:
@@ -192,31 +181,20 @@ class RecruiterRankingSystem:
 
                 "final_score":round(final,4),
 
-                # "semantic_score":round(semantic,4),
-
-                # "skill_score":round(skill_score,4),
-
-                # "experience_score":round(exp_score,4),
-
-                # "matched_skills":list(match),
-
                 "experience":exp,
                 "salary": float(cand.get("salary", 0)),
                 "resume_summary":cand["resume_text"][:200]+"..."
             })
 
-        # Apply feedback if requested
         if use_feedback:
             rated_embeds, ratings, _ = self.load_feedback_embeddings(jd_id)
             if rated_embeds is not None and len(ratings) > 0:
-                # We simply normalize ratings. It is ok if min is 0 or all ratings are the same.
                 r_min = ratings.min()
                 r_max = ratings.max()
                 if r_max == r_min:
                     norm_r = np.ones_like(ratings, dtype=np.float32) / len(ratings)
                 else:
                     norm_r = (ratings - r_min) / (r_max - r_min)
-                    # normalize sum
                     norm_sum = norm_r.sum()
                     if norm_sum > 0:
                         norm_r = norm_r / norm_sum
@@ -224,7 +202,6 @@ class RecruiterRankingSystem:
                         norm_r = np.ones_like(ratings, dtype=np.float32) / len(ratings)
 
                 try:
-                    # just use sum of arrays avoiding numpy weights param completely
                     norm_r_expanded = np.expand_dims(norm_r, axis=1)
                     weighted_sum = np.sum(rated_embeds * norm_r_expanded, axis=0)
                     user_vec = (weighted_sum / np.sum(norm_r)).astype(np.float32)
@@ -254,22 +231,14 @@ class RecruiterRankingSystem:
 
         results=sorted(results,key=lambda x:x["final_score"],reverse=True)
 
-        # Generate relevance and calculate metrics
         relevance_labels = []
         all_scores = []
 
-        # We need scores for all resumes to calculate NDCG and Precision accurately against the whole dataset
         candidate_scores = {r['candidate_id']: r['final_score'] for r in results}
 
         for _, row in self.resumes_df.iterrows():
             cid = str(row['candidate_id'])
 
-            # Synthetic relevance label based on skills and exp match
-            # (as the actual 'relevance' might need human annotation)
-            # A candidate is considered relevant if they meet the minimum experience and share at least one skill.
-
-            # For a more nuanced relevance, we could say relevant if final_score > threshold,
-            # but let's base it on extracted JD skills and exp.
             skills = set(str(row["skills"]).lower().split(";"))
             match = jd_skills.intersection(skills)
             exp = float(row["experience"])
@@ -281,12 +250,10 @@ class RecruiterRankingSystem:
 
         all_scores = np.nan_to_num(all_scores)
 
-        # Calculate metrics using the top_k value
         p_k, ndcg_k = self.compute_metrics(relevance_labels, all_scores, k=top_k)
 
         metrics = {"Precision@K": round(p_k, 4), "NDCG@K": round(ndcg_k, 4)}
 
-        # Log metrics to history
         log_row = pd.DataFrame([{
             "timestamp": pd.Timestamp.now().isoformat(),
             "Precision@K": round(p_k, 4),
@@ -301,7 +268,6 @@ class RecruiterRankingSystem:
         else:
             log_row.to_csv(self.metrics_path, mode="w", header=True, index=False)
 
-        # Return results with metrics
         return results[:top_k], metrics
 
 
@@ -312,7 +278,6 @@ class RecruiterRankingSystem:
             return pd.DataFrame(columns=full_schema)
         try:
             df = pd.read_csv(self.metrics_path)
-            # Ensure all required columns exist, add them with NA if missing
             for col in full_schema:
                 if col not in df.columns:
                     df[col] = pd.NA
@@ -335,13 +300,11 @@ class RecruiterRankingSystem:
 
     def retrain_with_feedback(self, job_description, jd_id, top_k=20, min_experience=0, max_salary=None):
 
-        # -------- BEFORE --------
         old, _ = self.rank_candidates(
             job_description, top_k, min_experience, max_salary=max_salary,
             use_feedback=False, jd_id=jd_id
         )
 
-        # -------- AFTER --------
         new, _ = self.rank_candidates(
             job_description, top_k, min_experience, max_salary=max_salary,
             use_feedback=True, jd_id=jd_id
@@ -350,19 +313,13 @@ class RecruiterRankingSystem:
         old_df = pd.DataFrame(old)
         new_df = pd.DataFrame(new)
 
-        # -------- CLEAN MERGE (NO _old/_new MESS) --------
-
-        # Rename scores
         old_df = old_df.rename(columns={"final_score": "final_score_old"})
         new_df = new_df.rename(columns={"final_score": "final_score_new"})
 
-        # Keep only required columns from new_df
         new_df_clean = new_df[["candidate_id", "final_score_new"]]
 
-        # Merge
         comp = old_df.merge(new_df_clean, on="candidate_id")
 
-        # -------- TRUE RELEVANCE --------
         jd = self.clean_text(job_description)
         jd_skills = self.extract_skills(jd)
 
@@ -396,7 +353,6 @@ class RecruiterRankingSystem:
         old_scores = np.array(old_scores)
         new_scores = np.array(new_scores)
 
-        # -------- METRICS --------
         if len(relevance) < 2:
             ndcg_before = 0.0
             ndcg_after = 0.0
@@ -411,7 +367,6 @@ class RecruiterRankingSystem:
 
         ndcg_improvement = ndcg_after - ndcg_before
 
-        # -------- REORDER --------
         old_order = {str(c["candidate_id"]): i for i, c in enumerate(old)}
         new_order = {str(c["candidate_id"]): i for i, c in enumerate(new)}
 
