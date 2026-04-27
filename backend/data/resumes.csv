@@ -760,3 +760,57 @@ ing registration time from 2 minutes to 45 seconds.
 partner onboarding, partner management, and lead manage-
 ment, resulting in a 20% improvement in lead conversion
 efficiency.",aws;react;java;docker;javascript;sql,0,0
+505,Movva Navya Sri Lakshmi,6304261675,navyakumar.2259@gmail.com,"Movva Navya Sri Lakshmi
+Backend Software Engineer
+ +91 6304261675
+# navyakumar.2259@gmail.com
+ï linkedin.com/in/movva-navya-sri-lakshmi
+Summary
+Backend Software Engineer with 3.8+ years of experience building scalable distributed systems for transaction-heavy
+platforms. Experienced in designing event-driven microservices using Java, Spring Boot, Kafka, Redis, and MongoDB.
+Strong in data structures, concurrency, and system design with a focus on performance optimization, reliability, and
+maintainable service architecture.
+Technical Skills
+Languages: Java, C++, Python, JavaScript, SQL
+Frameworks: Spring Boot, RESTful APIs
+Databases: MySQL, MongoDB (Sharding, Replication), Redis
+Distributed Systems: Apache Kafka, Event-Driven Architecture, Microservices
+Concepts: Data Structures & Algorithms, OOP, Concurrency, System Design
+Tools: Git, Maven, Gradle, Jenkins (CI/CD), JUnit
+Work Experience
+Assistant Manager 1 (SDE 2)
+Oct 2024 – Present
+Magicbricks Realty Services Ltd, India
+Homeloans CRM
+• Led design of scalable Spring Boot microservices supporting 20K+ monthly loan transactions.
+• Built asynchronous Kafka event pipelines to decouple services and improve response time by 30%.
+• Implemented Encashment, Invoicing, and Collection workflows reducing lead cycle time by 35%.
+• Integrated secure third-party APIs (Experian, banking partners) with OTP validation increasing qualified leads by
+25%.
+• Conducted code reviews, mentored engineers, and enforced SOLID design principles.
+HomeLoan Platform
+• Integrated multiple third-party banking APIs to enable real-time loan eligibility checks, increasing direct home loan
+leads by 40%.
+• Improved service performance using Redis caching and database indexing, reducing API latency by 30% in a CI/CD-
+driven Agile environment.
+Assistant Manager 2 (SDE 1)
+July 2022 – Sep 2024
+Magicbricks Realty Services Ltd, India
+HomeLoan App
+• Owned end-to-end lifecycle of backend services including design, development, testing, deployment, and production
+support of REST-based microservices.
+• Improved system throughput by 40% and reduced latency by 60% through asynchronous processing and optimized
+data structures.
+• Implemented Redis caching and MongoDB sharding strategies to scale backend services with increasing transaction
+volumes.
+Home Interiors & BRE & Site Visit
+• Optimized backend data processing workflows using efficient data structures, improving service processing efficiency
+by 20%.
+Education
+B.Tech in Computer Science and Engineering
+2018 – 2022
+NIT Nagpur, India
+Achievements
+• Earned Exceeds Expectations ratings for two consecutive quarters based on engineering performance and delivery
+impact.
+• Received the You Did It Award for delivering high-impact enhancements to the HomeLoan platform.",sql;java;javascript;python;c++,8,0
