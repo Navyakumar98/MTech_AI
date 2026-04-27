@@ -1,15 +1,10 @@
+import json
 import os
+import re
 import string
 import numpy as np
 import pandas as pd
 import faiss
-import torch
-from sentence_transformers import SentenceTransformer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import ndcg_score
-
-MODEL = SentenceTransformer("paraphrase-MiniLM-L6-v2", device="cpu")
-MODEL = torch.quantization.quantize_dynamic(MODEL, {torch.nn.Linear}, dtype=torch.qint8)
 
 
 def _spearman_r(a: np.ndarray, b: np.ndarray) -> float:
@@ -55,29 +50,105 @@ class JobRecommendationSystem:
         self.job_info = self.jobs_df.copy()
         self.jobs_texts = self.jobs_df["job_text"].tolist()
 
-        self.job_embeddings = MODEL.encode(self.jobs_texts, convert_to_numpy=True).astype(np.float16)
+        base_dir = os.path.dirname(__file__)
+        data_dir = os.path.join(base_dir, "data")
+        jobs_emb_path = os.path.join(data_dir, "jobs_embeddings.npy")
+        jobs_ids_path = os.path.join(data_dir, "jobs_ids.npy")
+        encoder_vocab_path = os.path.join(data_dir, "encoder_vocab.json")
+        encoder_emb_path = os.path.join(data_dir, "encoder_embeddings.npy")
+        encoder_idf_path = os.path.join(data_dir, "encoder_idf.npy")
+
+        if not os.path.exists(jobs_emb_path):
+            raise FileNotFoundError(
+                f"Missing precomputed embeddings: {jobs_emb_path}. "
+                "Run generate_embeddings.py locally first."
+            )
+        if not os.path.exists(jobs_ids_path):
+            raise FileNotFoundError(
+                f"Missing id mapping file: {jobs_ids_path}. "
+                "Run generate_embeddings.py locally first."
+            )
+        if not os.path.exists(encoder_vocab_path) or not os.path.exists(encoder_emb_path):
+            raise FileNotFoundError(
+                "Missing lightweight encoder artifacts (encoder_vocab.json / encoder_embeddings.npy). "
+                "Run generate_embeddings.py locally first."
+            )
+
+        self.job_embeddings = np.load(jobs_emb_path).astype(np.float32, copy=False)
+        job_ids = np.load(jobs_ids_path, allow_pickle=True)
+        self.job_id_to_emb_idx = {str(job_id): idx for idx, job_id in enumerate(job_ids)}
+
+        with open(encoder_vocab_path, "r", encoding="utf-8") as f:
+            vocab = json.load(f)
+        self.encoder_vocab = {str(k): int(v) for k, v in vocab.items()}
+        self.encoder_embeddings = np.load(encoder_emb_path).astype(np.float32, copy=False)
+        self.encoder_idf = None
+        if os.path.exists(encoder_idf_path):
+            self.encoder_idf = np.load(encoder_idf_path).astype(np.float32, copy=False)
 
         self.dim = int(self.job_embeddings.shape[1])
         self.index = faiss.IndexFlatIP(self.dim)
-        self.index.add(self.job_embeddings.astype(np.float16))
+        self.index.add(self._normalize_rows(self.job_embeddings))
 
         self.user_profile_vector = None
 
-        base_dir = os.path.dirname(__file__)
         self.metrics_path = os.path.join(base_dir, "data", "metrics.csv")
+
+    @staticmethod
+    def _normalize_rows(mat: np.ndarray) -> np.ndarray:
+        norms = np.linalg.norm(mat, axis=1, keepdims=True) + 1e-9
+        return (mat / norms).astype(np.float32, copy=False)
 
     def clean_text(self, text: str) -> str:
         return text.lower().translate(str.maketrans("", "", string.punctuation)).strip()
+
+    def _tokenize(self, text: str):
+        return re.findall(r"[a-z0-9+#.]{2,}", self.clean_text(str(text)))
+
+    def _encode_text_lightweight(self, text: str) -> np.ndarray:
+        tokens = self._tokenize(text)
+        if not tokens:
+            return np.zeros(self.dim, dtype=np.float32)
+
+        vec = np.zeros(self.dim, dtype=np.float32)
+        wsum = 0.0
+        for tok in tokens:
+            idx = self.encoder_vocab.get(tok)
+            if idx is None:
+                continue
+            weight = float(self.encoder_idf[idx]) if self.encoder_idf is not None else 1.0
+            vec += self.encoder_embeddings[idx] * weight
+            wsum += weight
+
+        if wsum <= 0:
+            return np.zeros(self.dim, dtype=np.float32)
+        vec /= wsum
+        n = float(np.linalg.norm(vec) + 1e-9)
+        return (vec / n).astype(np.float32, copy=False)
 
     def filter_top_jobs(self, resume_text: str, top_n: int = 100):
         """
         Fast prefilter using TF-IDF to keep the top-N candidates before FAISS search.
         Returns (filtered_texts, filtered_df, filtered_embeddings)
         """
-        vectorizer = TfidfVectorizer()
-        job_vectors = vectorizer.fit_transform(self.jobs_texts)
-        resume_vector = vectorizer.transform([resume_text])
-        similarity_scores = (job_vectors @ resume_vector.T).toarray().flatten()
+        resume_tokens = set(self._tokenize(resume_text))
+        if not resume_tokens:
+            top_indices = np.arange(min(len(self.jobs_texts), top_n))
+            return (
+                [self.jobs_texts[i] for i in top_indices],
+                self.job_info.iloc[top_indices].reset_index(drop=True),
+                self.job_embeddings[top_indices],
+            )
+
+        def overlap_score(job_txt: str) -> float:
+            jt = set(self._tokenize(job_txt))
+            if not jt:
+                return 0.0
+            inter = len(resume_tokens.intersection(jt))
+            union = len(resume_tokens.union(jt))
+            return inter / (union + 1e-9)
+
+        similarity_scores = np.array([overlap_score(jt) for jt in self.jobs_texts], dtype=np.float32)
         top_indices = np.argsort(similarity_scores)[-top_n:]
         return (
             [self.jobs_texts[i] for i in top_indices],
@@ -109,15 +180,14 @@ class JobRecommendationSystem:
         if merged.empty:
             return None, None, None
 
-        merged["job_text"] = (
-            merged["workplace"].astype(str) + " " +
-            merged["working_mode"].astype(str) + " " +
-            merged["position"].astype(str) + " " +
-            merged["job_role_and_duties"].astype(str) + " " +
-            merged["requisite_skill"].astype(str)
-        )
-        job_embeds = MODEL.encode(merged["job_text"].tolist(), convert_to_numpy=True).astype(np.float16)
-        ratings = merged["rating"].to_numpy(dtype=np.float16)
+        emb_indices = [self.job_id_to_emb_idx.get(str(jid)) for jid in merged["job_id"].tolist()]
+        valid_rows = [i for i, emb_i in enumerate(emb_indices) if emb_i is not None]
+        if not valid_rows:
+            return None, None, None
+        emb_indices = [emb_indices[i] for i in valid_rows]
+        merged = merged.iloc[valid_rows].reset_index(drop=True)
+        job_embeds = self.job_embeddings[np.array(emb_indices, dtype=np.int64)]
+        ratings = merged["rating"].to_numpy(dtype=np.float32)
         return job_embeds, ratings, merged
 
     @staticmethod
@@ -148,11 +218,12 @@ class JobRecommendationSystem:
             resume_text, top_n=max(100, top_n * 3)
         )
 
-        resume_embedding = MODEL.encode([resume_text], convert_to_numpy=True).astype(np.float16)
+        resume_embedding = self._encode_text_lightweight(resume_text).reshape(1, -1)
 
         index = faiss.IndexFlatIP(self.dim)
-        index.add(filtered_embeds.astype(np.float16))
-        distances, indices = index.search(resume_embedding.astype(np.float16), top_n)
+        normalized_filtered = self._normalize_rows(filtered_embeds)
+        index.add(normalized_filtered)
+        distances, indices = index.search(resume_embedding.astype(np.float32), top_n)
 
         base_sims = distances[0]
         sims_norm = (base_sims - base_sims.min()) / (base_sims.max() - base_sims.min() + 1e-9)
@@ -178,10 +249,11 @@ class JobRecommendationSystem:
             return {"recommended_jobs": recs.to_dict(orient="records"), "resume_quality": resume_quality}
 
         norm_r = (ratings - ratings.min()) / (ratings.max() - ratings.min() + 1e-9)
-        user_vec = np.average(rated_embeds, axis=0, weights=norm_r).astype(np.float16)
+        user_vec = np.average(rated_embeds, axis=0, weights=norm_r).astype(np.float32)
+        user_vec = user_vec / (np.linalg.norm(user_vec) + 1e-9)
         self.user_profile_vector = user_vec
 
-        filtered_sel = filtered_embeds[indices[0]]
+        filtered_sel = normalized_filtered[indices[0]]
         up_sim = np.dot(filtered_sel, user_vec) / (
             np.linalg.norm(filtered_sel, axis=1) * np.linalg.norm(user_vec) + 1e-9
         )
@@ -331,7 +403,7 @@ class JobRecommendationSystem:
         y_true = comp["similarity"].fillna(0).to_numpy()
         y_score = comp["adjusted_score"].fillna(0).to_numpy()
 
-        ndcg = float(ndcg_score([y_true], [y_score]))
+        ndcg = self._ndcg_at_k(y_true, y_score, k=top_n)
 
         spear = _spearman_r(y_true, y_score)
 
@@ -368,6 +440,27 @@ class JobRecommendationSystem:
                 "reordered_pct": round(reordered_pct, 1),
             },
         }
+
+    @staticmethod
+    def _dcg(scores: np.ndarray, k: int) -> float:
+        k = min(k, scores.size)
+        if k <= 0:
+            return 0.0
+        gains = scores[:k]
+        discounts = 1.0 / np.log2(np.arange(2, k + 2))
+        return float(np.sum(gains * discounts))
+
+    @classmethod
+    def _ndcg_at_k(cls, y_true: np.ndarray, y_score: np.ndarray, k: int) -> float:
+        if y_true.size == 0 or y_score.size == 0:
+            return 0.0
+        order = np.argsort(y_score)[::-1]
+        ideal = np.argsort(y_true)[::-1]
+        dcg = cls._dcg(y_true[order], k)
+        idcg = cls._dcg(y_true[ideal], k)
+        if idcg <= 0:
+            return 0.0
+        return dcg / idcg
 
     def get_metrics_history(self):
         """Return metrics history DataFrame if available."""

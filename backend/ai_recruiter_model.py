@@ -1,27 +1,26 @@
+import json
 import os
 import re
 import string
 import numpy as np
 import pandas as pd
 import faiss
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics import ndcg_score
-from scipy.stats import spearmanr
 
-_model=None
 
-def get_model():
-    global _model
-    if _model is None:
-        _model=SentenceTransformer("paraphrase-MiniLM-L6-v2",device="cpu")
-    return _model
+def _spearman_r(a: np.ndarray, b: np.ndarray) -> float:
+    if a.size == 0 or b.size == 0:
+        return 0.0
+    a_ranks = pd.Series(a).rank(method="average").to_numpy()
+    b_ranks = pd.Series(b).rank(method="average").to_numpy()
+    a_center = a_ranks - a_ranks.mean()
+    b_center = b_ranks - b_ranks.mean()
+    denom = (np.linalg.norm(a_center) * np.linalg.norm(b_center)) + 1e-9
+    return float(np.dot(a_center, b_center) / denom)
 
 
 class RecruiterRankingSystem:
 
     def __init__(self,resumes_csv):
-
-        self.model=get_model()
 
         base_dir = os.path.dirname(__file__)
         csv_path = os.path.join(base_dir, resumes_csv)
@@ -53,7 +52,40 @@ class RecruiterRankingSystem:
 
         self.resume_texts = self.resumes_df["resume_text"].fillna("").astype(str).tolist()
 
-        emb=self.model.encode(self.resume_texts,convert_to_numpy=True).astype(np.float32)
+        data_dir = os.path.join(base_dir, "data")
+        resumes_emb_path = os.path.join(data_dir, "resumes_embeddings.npy")
+        resumes_ids_path = os.path.join(data_dir, "resumes_ids.npy")
+        encoder_vocab_path = os.path.join(data_dir, "encoder_vocab.json")
+        encoder_emb_path = os.path.join(data_dir, "encoder_embeddings.npy")
+        encoder_idf_path = os.path.join(data_dir, "encoder_idf.npy")
+
+        if not os.path.exists(resumes_emb_path):
+            raise FileNotFoundError(
+                f"Missing precomputed embeddings: {resumes_emb_path}. "
+                "Run generate_embeddings.py locally first."
+            )
+        if not os.path.exists(resumes_ids_path):
+            raise FileNotFoundError(
+                f"Missing id mapping file: {resumes_ids_path}. "
+                "Run generate_embeddings.py locally first."
+            )
+        if not os.path.exists(encoder_vocab_path) or not os.path.exists(encoder_emb_path):
+            raise FileNotFoundError(
+                "Missing lightweight encoder artifacts (encoder_vocab.json / encoder_embeddings.npy). "
+                "Run generate_embeddings.py locally first."
+            )
+
+        with open(encoder_vocab_path, "r", encoding="utf-8") as f:
+            vocab = json.load(f)
+        self.encoder_vocab = {str(k): int(v) for k, v in vocab.items()}
+        self.encoder_embeddings = np.load(encoder_emb_path).astype(np.float32, copy=False)
+        self.encoder_idf = None
+        if os.path.exists(encoder_idf_path):
+            self.encoder_idf = np.load(encoder_idf_path).astype(np.float32, copy=False)
+
+        emb = np.load(resumes_emb_path).astype(np.float32, copy=False)
+        resume_ids = np.load(resumes_ids_path, allow_pickle=True)
+        self.candidate_id_to_emb_idx = {str(cid): idx for idx, cid in enumerate(resume_ids)}
 
         emb=emb/(np.linalg.norm(emb,axis=1,keepdims=True)+1e-9)
 
@@ -68,6 +100,27 @@ class RecruiterRankingSystem:
         self.ratings_path = os.path.join(base_dir, "data", "recruiter_ratings.csv")
 
         self.user_profile_vector = None
+
+    def _encode_text_lightweight(self, text: str) -> np.ndarray:
+        tokens = re.findall(r"[a-z0-9+#.]{2,}", self.clean_text(str(text)))
+        if not tokens:
+            return np.zeros(self.resume_embeddings.shape[1], dtype=np.float32)
+
+        vec = np.zeros(self.resume_embeddings.shape[1], dtype=np.float32)
+        wsum = 0.0
+        for tok in tokens:
+            idx = self.encoder_vocab.get(tok)
+            if idx is None:
+                continue
+            weight = float(self.encoder_idf[idx]) if self.encoder_idf is not None else 1.0
+            vec += self.encoder_embeddings[idx] * weight
+            wsum += weight
+
+        if wsum <= 0:
+            return np.zeros(self.resume_embeddings.shape[1], dtype=np.float32)
+        vec /= wsum
+        vec = vec / (np.linalg.norm(vec) + 1e-9)
+        return vec.astype(np.float32, copy=False)
 
 
     def clean_text(self,text):
@@ -119,7 +172,13 @@ class RecruiterRankingSystem:
         if merged.empty:
             return None, None, None
 
-        cand_embeds = self.model.encode(merged["resume_text"].tolist(), convert_to_numpy=True).astype(np.float32)
+        emb_indices = [self.candidate_id_to_emb_idx.get(str(cid)) for cid in merged["candidate_id"].tolist()]
+        valid_rows = [i for i, emb_i in enumerate(emb_indices) if emb_i is not None]
+        if not valid_rows:
+            return None, None, None
+        emb_indices = [emb_indices[i] for i in valid_rows]
+        merged = merged.iloc[valid_rows].reset_index(drop=True)
+        cand_embeds = self.resume_embeddings[np.array(emb_indices, dtype=np.int64)]
         ratings = merged["rating"].to_numpy(dtype=np.float32)
         return cand_embeds, ratings, merged
 
@@ -132,7 +191,7 @@ class RecruiterRankingSystem:
 
         jd=self.clean_text(job_description)
 
-        jd_emb=self.model.encode([jd],convert_to_numpy=True).astype(np.float32)
+        jd_emb = self._encode_text_lightweight(jd).reshape(1, -1)
 
         jd_emb=jd_emb/(np.linalg.norm(jd_emb)+1e-9)
 
@@ -292,7 +351,7 @@ class RecruiterRankingSystem:
         top_k_relevance = relevance_labels[indices[:k]]
         precision_at_k = np.sum(top_k_relevance) / k
         try:
-            ndcg_at_k = float(ndcg_score([relevance_labels], [predicted_scores], k=k))
+            ndcg_at_k = float(self._ndcg_at_k(relevance_labels, predicted_scores, k=k))
         except ValueError:
             ndcg_at_k = 0.0
         return precision_at_k, ndcg_at_k
@@ -358,10 +417,10 @@ class RecruiterRankingSystem:
             ndcg_after = 0.0
             spear = 0.0
         else:
-            ndcg_before = float(ndcg_score([relevance], [old_scores]))
-            ndcg_after = float(ndcg_score([relevance], [new_scores]))
+            ndcg_before = float(self._ndcg_at_k(relevance, old_scores, k=top_k))
+            ndcg_after = float(self._ndcg_at_k(relevance, new_scores, k=top_k))
 
-            spear, _ = spearmanr(old_scores, new_scores)
+            spear = _spearman_r(old_scores, new_scores)
             if np.isnan(spear):
                 spear = 0.0
 
@@ -388,3 +447,24 @@ class RecruiterRankingSystem:
                 "k": top_k
             }
         }
+
+    @staticmethod
+    def _dcg(scores: np.ndarray, k: int) -> float:
+        k = min(k, scores.size)
+        if k <= 0:
+            return 0.0
+        gains = scores[:k]
+        discounts = 1.0 / np.log2(np.arange(2, k + 2))
+        return float(np.sum(gains * discounts))
+
+    @classmethod
+    def _ndcg_at_k(cls, y_true: np.ndarray, y_score: np.ndarray, k: int) -> float:
+        if y_true.size == 0 or y_score.size == 0:
+            return 0.0
+        order = np.argsort(y_score)[::-1]
+        ideal = np.argsort(y_true)[::-1]
+        dcg = cls._dcg(y_true[order], k)
+        idcg = cls._dcg(y_true[ideal], k)
+        if idcg <= 0:
+            return 0.0
+        return dcg / idcg
