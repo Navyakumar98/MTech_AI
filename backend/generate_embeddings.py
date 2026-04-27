@@ -68,26 +68,54 @@ def _build_token_encoder(texts, embeddings, max_vocab=50000, min_df=2):
     return vocab, token_embeddings, idf
 
 
+def _resolve_input_path(base_dir: str, given_path: str, fallback_candidates):
+    if given_path:
+        candidate = os.path.join(base_dir, given_path) if not os.path.isabs(given_path) else given_path
+        if os.path.exists(candidate):
+            return candidate
+        raise FileNotFoundError(f"Input file not found: {candidate}")
+
+    for rel_path in fallback_candidates:
+        candidate = os.path.join(base_dir, rel_path)
+        if os.path.exists(candidate):
+            return candidate
+
+    searched = [os.path.join(base_dir, p) for p in fallback_candidates]
+    raise FileNotFoundError("Could not auto-detect input file. Searched: " + ", ".join(searched))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate offline embeddings for low-memory runtime.")
-    parser.add_argument("--jobs-csv", default="JobsFE.csv", help="Path to Jobs CSV.")
-    parser.add_argument("--resumes-csv", default=os.path.join("data", "resumes.csv"), help="Path to resumes CSV.")
+    parser.add_argument(
+        "--jobs-csv",
+        default=None,
+        help="Path to Jobs CSV. If omitted, auto-detects backend/JobsFE.csv or backend/data/JobsFE.csv.",
+    )
+    parser.add_argument(
+        "--resumes-csv",
+        default=None,
+        help="Path to resumes CSV. If omitted, auto-detects backend/data/resumes.csv.",
+    )
     parser.add_argument("--out-dir", default="data", help="Output directory for .npy/.json artifacts.")
     parser.add_argument("--model-name", default="paraphrase-MiniLM-L6-v2", help="SentenceTransformer model.")
     args = parser.parse_args()
 
     base_dir = os.path.dirname(__file__)
-    jobs_csv_path = os.path.join(base_dir, args.jobs_csv) if not os.path.isabs(args.jobs_csv) else args.jobs_csv
-    resumes_csv_path = (
-        os.path.join(base_dir, args.resumes_csv) if not os.path.isabs(args.resumes_csv) else args.resumes_csv
+    jobs_csv_path = _resolve_input_path(
+        base_dir,
+        args.jobs_csv,
+        fallback_candidates=["JobsFE.csv", os.path.join("data", "JobsFE.csv")],
+    )
+    resumes_csv_path = _resolve_input_path(
+        base_dir,
+        args.resumes_csv,
+        fallback_candidates=[os.path.join("data", "resumes.csv"), "resumes.csv"],
     )
     out_dir = os.path.join(base_dir, args.out_dir) if not os.path.isabs(args.out_dir) else args.out_dir
     os.makedirs(out_dir, exist_ok=True)
 
-    if not os.path.exists(jobs_csv_path):
-        raise FileNotFoundError(f"Jobs CSV not found: {jobs_csv_path}")
-    if not os.path.exists(resumes_csv_path):
-        raise FileNotFoundError(f"Resumes CSV not found: {resumes_csv_path}")
+    print("Using jobs CSV:", jobs_csv_path)
+    print("Using resumes CSV:", resumes_csv_path)
 
     jobs_df = pd.read_csv(jobs_csv_path)
     resumes_df = pd.read_csv(resumes_csv_path, encoding="utf-8", quotechar='"', skipinitialspace=True)
@@ -140,3 +168,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
