@@ -397,7 +397,7 @@ const RecruiterModule = () => {
                     </select>
                   </LabeledField>
 
-                  <LabeledField label="Max Salary" icon={<Icon.Dollar className="w-4 h-4" />}>
+                  {/* <LabeledField label="Max Salary" icon={<Icon.Dollar className="w-4 h-4" />}>
                     <input
                       type="number"
                       min="0"
@@ -406,7 +406,22 @@ const RecruiterModule = () => {
                       onChange={(e) => setMaxSalary(parseInt(e.target.value) || 0)}
                       className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-ink-100 bg-white text-ink-900 placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent transition"
                     />
-                  </LabeledField>
+                  </LabeledField> */}
+
+                  <LabeledField
+  label="Max Salary (INR)"
+  icon={<span className="text-sm font-medium">₹</span>}
+>
+  <input
+    type="number"
+    min="0"
+    step="50000"
+    value={maxSalary}
+    onChange={(e) => setMaxSalary(parseInt(e.target.value) || 0)}
+    placeholder="e.g. 1200000"
+    className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-ink-100 bg-white text-ink-900 placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent transition"
+  />
+</LabeledField>
 
                   <LabeledField label="Minimum Experience (yrs)" icon={<Icon.Briefcase className="w-4 h-4" />}>
                     <input
@@ -513,13 +528,13 @@ const RecruiterModule = () => {
                       value={`${metrics.avgMatch}%`}
                       sub="Across K"
                     />
-                    <MetricCard
+                    {/* <MetricCard
                       tone="amber"
                       icon={<Icon.Shield className="w-4 h-4" />}
                       label="Hiring Confidence"
                       value={`${metrics.confidence}%`}
                       sub="AI"
-                    />
+                    /> */}
                   </div>
 
                   {/* Tabs */}
@@ -641,7 +656,7 @@ const CandidateTable = ({ candidates, ratings, setRatings, submitRating }) => {
                   </td>
                   <td className="px-3 py-3 text-sm text-ink-700 tabular-nums">{c.experience ?? '—'} yrs</td>
                   <td className="px-3 py-3 text-sm text-ink-700 tabular-nums">
-                    {c.salary ? `$${Number(c.salary).toLocaleString()}` : '—'}
+                    {c.salary ? `₹${Number(c.salary).toLocaleString()}` : '—'}
                   </td>
                   <td className="px-3 py-3">
                     <div className="w-28">
@@ -801,12 +816,12 @@ const RankingIntelligence = ({ enhancedResults, metrics }) => {
           label="Lift (NDCG)"
           value={ndcgLift}
         />
-        <IntelCard
+        {/* <IntelCard
           tone="amber"
           icon={<Icon.Shield className="w-4 h-4 text-warn-600" />}
           label="AI Confidence"
           value={`${metrics.confidence}%`}
-        />
+        /> */}
         <IntelCard
           tone="navy"
           icon={<span className="text-navy-700 font-bold text-base">Σ</span>}

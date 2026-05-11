@@ -146,9 +146,8 @@ const MetricCard = ({ icon, label, value, sub, tone = 'navy' }) => {
 const TabButton = ({ active, onClick, children }) => (
   <button
     onClick={onClick}
-    className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
-      active ? 'text-navy-700' : 'text-ink-500 hover:text-ink-800'
-    }`}
+    className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${active ? 'text-navy-700' : 'text-ink-500 hover:text-ink-800'
+      }`}
   >
     {children}
     {active && (
@@ -352,13 +351,22 @@ const JobseekerModule = () => {
                     onChange={(e) => setUserLocation(e.target.value)}
                     placeholder="e.g. Berlin, Germany"
                   />
-                  <LabeledInput
+                  {/* <LabeledInput
                     label="Desired Salary"
                     icon={<Icon.Dollar className="w-4 h-4" />}
                     value={userSalary}
                     onChange={(e) => setUserSalary(e.target.value)}
                     placeholder="e.g. 120000"
+                  /> */}
+
+                  <LabeledInput
+                    label="Desired Salary (INR)"
+                    icon={<span>₹</span>}
+                    value={userSalary}
+                    onChange={(e) => setUserSalary(e.target.value)}
+                    placeholder="e.g. 12,00,000"
                   />
+
                   <LabeledInput
                     label="Years of Experience"
                     icon={<Icon.Briefcase className="w-4 h-4" />}
@@ -406,11 +414,10 @@ const JobseekerModule = () => {
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`relative rounded-2xl border-2 border-dashed px-6 py-10 text-center cursor-pointer transition-all ${
-                  dragOver
+                className={`relative rounded-2xl border-2 border-dashed px-6 py-10 text-center cursor-pointer transition-all ${dragOver
                     ? 'border-brand-accent bg-brand-accentSoft/60'
                     : 'border-brand-accent/40 bg-brand-accentSoft/30 hover:bg-brand-accentSoft/50 hover:border-brand-accent/60'
-                }`}
+                  }`}
               >
                 <input
                   ref={fileInputRef}
@@ -614,7 +621,7 @@ const JobMatchesTab = ({ jobResults, ratings, setRatings, submitRating }) => {
             <details className="ml-9 group/details">
               <summary className="cursor-pointer text-xs font-medium text-brand-accent hover:text-brand-accentDark list-none inline-flex items-center gap-1">
                 View details
-                <svg className="w-3 h-3 transition-transform group-open/details:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg className="w-3 h-3 transition-transform group-open/details:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
               </summary>
               <div className="mt-3 text-xs text-ink-600 space-y-2 pb-1">
                 {job.job_role_and_duties && (
